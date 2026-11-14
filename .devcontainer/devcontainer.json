@@ -1,8 +1,8 @@
 {
   "name": "ai-stack (Docker + Python)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:1": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest",
       "moby": true
     },
@@ -20,12 +20,12 @@
   "portsAttributes": {
     "3080": { "label": "LibreChat (agente)", "onAutoForward": "notify" },
     "8188": { "label": "ComfyUI (imagem)", "onAutoForward": "silent" },
-    "8080": { "label": "Stirling (documentos)", "onAutoForward": "silent" },
+    "8080": { "label": "Stirling (documentos)", "onAutoForward": "notify" },
     "8081": { "label": "FreshRSS", "onAutoForward": "silent" },
     "11434": { "label": "Ollama (API)", "onAutoForward": "silent" }
   },
   "postCreateCommand": "bash scripts/bootstrap.sh",
-  "postStartCommand": "docker info >/dev/null 2>&1 || sudo service docker start",
+  "postStartCommand": "sudo service docker start || true",
   "remoteUser": "vscode",
   "customizations": {
     "vscode": {

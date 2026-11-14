@@ -5,13 +5,26 @@ set -uo pipefail
 
 echo "== ai-stack bootstrap =="
 
-# 1. Docker funcionando?
-if ! docker info >/dev/null 2>&1; then
-  echo "-> iniciando docker"
-  sudo service docker start >/dev/null 2>&1 || true
-  sleep 3
+# 1. Docker instalado?
+if ! command -v docker >/dev/null 2>&1; then
+  echo "-> docker ausente; tentando instalar"
+  sudo apt-get update -qq >/dev/null 2>&1 || true
+  sudo apt-get install -y -qq docker.io docker-compose-plugin >/dev/null 2>&1 \
+    || sudo apt-get install -y -qq docker.io docker-compose >/dev/null 2>&1 \
+    || sudo apt-get install -y -qq docker.io >/dev/null 2>&1 || true
 fi
-docker --version || echo "AVISO: docker nao subiu; os servicos nao vao rodar"
+
+# 2. Docker rodando?
+if command -v docker >/dev/null 2>&1 && ! docker info >/dev/null 2>&1; then
+  echo "-> iniciando docker"
+  sudo service docker start >/dev/null 2>&1 || sudo dockerd >/dev/null 2>&1 &
+  sleep 5
+fi
+if command -v docker >/dev/null 2>&1; then
+  docker --version
+else
+  echo "AVISO: docker nao instalou. Rode: ./scripts/up.sh docs (ele tenta de novo)"
+fi
 
 # 2. compose plugin
 docker compose version || sudo apt-get install -y docker-compose-plugin >/dev/null 2>&1 || true

@@ -37,12 +37,36 @@ case "$1" in
     exit 0 ;;
 esac
 
-# --- docker existe e esta rodando?
+# --- docker existe? se nao, tenta instalar no Codespace/Debian
 if ! command -v docker >/dev/null 2>&1; then
-  erro "docker nao esta instalado neste ambiente."
-  echo "  No Codespace: sudo service docker start"
-  echo "  No seu PC: instale Docker Desktop"
-  exit 1
+  aviso "docker nao encontrado; tentando instalar (Codespace/Debian)..."
+  if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" = "0" ]; then
+    apt-get update -qq >/dev/null 2>&1
+    apt-get install -y -qq docker.io docker-compose-plugin >/dev/null 2>&1 \
+      || apt-get install -y -qq docker.io docker-compose >/dev/null 2>&1 \
+      || apt-get install -y -qq docker.io >/dev/null 2>&1
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo apt-get update -qq >/dev/null 2>&1
+    sudo apt-get install -y -qq docker.io docker-compose-plugin >/dev/null 2>&1 \
+      || sudo apt-get install -y -qq docker.io docker-compose >/dev/null 2>&1 \
+      || sudo apt-get install -y -qq docker.io >/dev/null 2>&1
+  fi
+
+  if ! command -v docker >/dev/null 2>&1; then
+    erro "docker nao pode ser instalado automaticamente aqui."
+    echo
+    echo "  OPCAO A - recriar o Codespace (recomendado):"
+    echo "    o .devcontainer/ do repo instala o Docker sozinho."
+    echo "    github.com/codespaces -> apague esta maquina -> New codespace"
+    echo
+    echo "  OPCAO B - instalar na mao, agora:"
+    echo "    sudo apt-get update && sudo apt-get install -y docker.io docker-compose-plugin"
+    echo "    sudo service docker start"
+    echo
+    echo "  OPCAO C - se o Docker Desktop esta no seu PC, rode o ai-stack nele"
+    exit 1
+  fi
+  ok "docker instalado"
 fi
 if ! docker info >/dev/null 2>&1; then
   aviso "docker nao esta rodando; tentando iniciar..."

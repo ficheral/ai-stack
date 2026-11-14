@@ -63,6 +63,29 @@ Para aprender e trabalhar em sessão, Codespaces.
 
 ## Verificação honesta
 
+## Se o Codespace abrir sem Docker
+
+Sintoma: `./scripts/up.sh docs` responde *"docker nao esta instalado"*.
+
+Causa: o Codespace foi criado **antes** do `.devcontainer/` estar correto, então
+montou a imagem padrão (sem Docker). Corrigi o arquivo: base `bookworm` e
+`docker-in-docker:2`, que é o que o template oficial usa.
+
+**Correção definitiva:** apague a máquina e crie outra.
+`github.com/codespaces` → nos três pontinhos da máquina → *Delete* →
+*New codespace* em `ficheral/ai-stack`.
+
+**Correção rápida, sem recriar:**
+
+```bash
+sudo apt-get update
+sudo apt-get install -y docker.io docker-compose-plugin
+sudo service docker start
+./scripts/up.sh docs
+```
+
+O `./scripts/up.sh` agora **tenta instalar o Docker sozinho** antes de desistir.
+
 O Codespaces eu **não consegui testar** — abrir uma sessão exige login na sua conta
 GitHub, e eu não tenho acesso ao navegador logado como você. O que está verificado:
 o `devcontainer.json` é JSON válido, tem `docker-in-docker` + Python + CLI, e o
