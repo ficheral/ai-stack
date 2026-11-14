@@ -33,3 +33,9 @@ ai-stack/
 
 Nada aqui tem assinatura, mensalidade ou cartao. Os tetos reais estao em
 `docs/ARQUITETURA.md` — leia antes de prometer algo.
+
+## Por onde comecar
+
+1. Leia `docs/CURSO.md` — a trilha de 10 modulos, do zero ao stack rodando.
+2. Siga `COMO-SUBIR.md` para publicar este pacote no GitHub.
+3. Só depois suba um dominio: `./scripts/up.sh agent`.

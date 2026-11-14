@@ -1,0 +1,30 @@
+# Dominio: ACESSO REMOTO
+# Sobe o Tailscale como sidecar de rede: seus dispositivos entram numa rede privada
+# e acessam os servicos sem abrir porta no roteador.
+# Free: 3 usuarios, 100 dispositivos. Nao exige dominio proprio.
+#
+# Uso:
+#   1. Crie uma conta em https://login.tailscale.com
+#   2. Gere um auth key em Settings > Keys (reutilizavel, expira em 90 dias)
+#   3. Coloque em compose/.env como TS_AUTHKEY=tskey-auth-...
+#   4. docker compose -f compose/docker-compose.remoto.yml --env-file compose/.env up -d
+
+name: ai-stack-remoto
+
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: ai-tailscale
+    restart: unless-stopped
+    hostname: ai-stack
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?defina TS_AUTHKEY no .env}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_ACCEPT_DNS: "false"
+    volumes:
+      - "${DATA_DIR:-/srv/ai-stack}/tailscale:/var/lib/tailscale"
+      - /dev/net/tun:/dev/net/tun
+    cap_add: [NET_ADMIN]
+    network_mode: host
+    # Com network_mode: host o Tailscale ve as portas do host direto.
+    # Em Docker Desktop (Windows/Mac) troque por ports + TS_USERSPACE=true.
