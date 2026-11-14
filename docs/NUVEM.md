@@ -75,7 +75,30 @@ montou a imagem padrão (sem Docker). Corrigi o arquivo: base `bookworm` e
 `github.com/codespaces` → nos três pontinhos da máquina → *Delete* →
 *New codespace* em `ficheral/ai-stack`.
 
-**Correção rápida, sem recriar:**
+### Se `apt-get` responder "not found"
+
+Isso significa que a imagem **não é Debian/Ubuntu** — quase sempre é **Alpine**
+(que usa `apk`, não `apt`). O Codespace montou a imagem padrão porque o
+`.devcontainer` não foi aplicado.
+
+**Descubra onde você está** (funciona em qualquer distro):
+
+```bash
+bash scripts/diagnostico.sh
+```
+
+Ele diz a distro, o gerenciador de pacotes, o que já está instalado e o comando
+exato para o **seu** caso.
+
+**Alpine / Codespace padrão:**
+
+```bash
+sudo apk add docker docker-cli-compose
+sudo service docker start
+./scripts/up.sh docs
+```
+
+**Debian/Ubuntu:**
 
 ```bash
 sudo apt-get update
@@ -83,6 +106,10 @@ sudo apt-get install -y docker.io docker-compose-plugin
 sudo service docker start
 ./scripts/up.sh docs
 ```
+
+> Imagem Alpine tem `musl` em vez de `glibc`. Algumas imagens dos serviços
+> (LibreChat, Stirling) podem não rodar nela. O caminho bom é o Codespace
+> **com** o `.devcontainer` do repo, que usa `bookworm`.
 
 O `./scripts/up.sh` agora **tenta instalar o Docker sozinho** antes de desistir.
 
