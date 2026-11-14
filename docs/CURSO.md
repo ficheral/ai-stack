@@ -227,6 +227,60 @@ ambiente viram **ConfigurationElement**: atributo do pacote, consumido como inpu
 > Depende de versão (9.1.1): formato de `input_form_` e `signatures/` não portam
 > entre versões maiores.
 
+---
+
+## Módulo 11 — seu primeiro workflow de verdade (30 min)
+
+**Prática:** uma action ES5 que normaliza nome de VM + um workflow que a chama.
+Acento e espaço em nome de VM quebram hostname, pasta de datastore e tag.
+
+### 1) Criar a action
+
+Inventário → **Actions** → nova pasta `com.tjsp.aula` → *Add Action* → nome `normalizarNomeVM`.
+Aba **Script**: colar o código. Aba **Inputs**: `nome`, tipo `string`. **Return type**: `string`.
+
+```js
+// ES5 / Rhino — sem let, const, arrow, template string
+if (!nome) throw new Error("Informe o nome da VM.");
+var n = String(nome).toLowerCase()
+  .replace(/[áàâãä]/g, "a").replace(/[éèêë]/g, "e")
+  .replace(/[íìîï]/g, "i").replace(/[óòôõö]/g, "o")
+  .replace(/[úùûü]/g, "u").replace(/ç/g, "c")
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+if (n.length === 0) throw new Error("Nome inválido: " + nome);
+return n.substring(0, 80).replace(/-$/, "");
+```
+
+### 2) Criar o workflow
+
+1. **Workflows** → *New Workflow* → nome `Aula - Normalizar Nome de VM`.
+2. Aba **Inputs**: `nomeVM`, tipo `string`.
+3. Aba **Schema** → *New* → atributo `nomeNormalizado`, tipo `string`.
+4. Arraste um **Scriptable task** para o canvas.
+5. Aba **IN** do task: `nome` = `nomeVM`.
+6. Aba **OUT**: `saida` = `nomeNormalizado`.
+7. No script do task (ES5):
+
+```js
+saida = System.getModule("com.tjsp.aula").normalizarNomeVM(nome);
+System.log("Nome normalizado: " + saida);
+```
+
+8. **Save and run** com `nomeVM` = `Servidor Ação Ç`.
+
+### 3) O que você deve ver
+
+- Log: `Nome normalizado: servidor-acao-c` — e o output `nomeNormalizado` igual.
+- Com `nomeVM` vazio: o workflow falha com *Informe o nome da VM.* (a exceção da action sobe para o workflow — é o que você quer).
+- Com `!!!`: falha com *Nome inválido*.
+
+**O que acabou de acontecer:** a action é a função, o workflow é quem a orquestra.
+O binding IN é o argumento, o OUT é o `return`. Sem OUT ligado, a action roda e o valor se perde — erro silencioso mais comum.
+
+*Versão:* `System.getModule` existe de 7.x a 9.1. Em 9.x o Rhino continua o motor padrão de actions (ES5). `throw` em action aparece como erro do workflow; usar `WorkflowException` também é válido.
+
+---
+
 ## Regras do curso
 
 1. **Um modulo por vez.** Nao pule para Docker sem ter feito um commit.
@@ -247,4 +301,6 @@ Marque aqui conforme avanca:
 - [ ] Modulo 6 — CI
 - [ ] Modulo 7 — GPU
 - [ ] Modulo 8 — seguranca
-- [ ] Modulo 9 — integracao VCF
+- [ ] Modulo 9 — integracao VCF (partes A e B escritas)
+- [ ] Modulo 10 — primeiro caso de uso real de VCF
+- [ ] Modulo 11 — primeiro workflow no vRO
