@@ -110,6 +110,51 @@ Aqui entram os outros dois professores:
 
 **Pratica:** um script do ai-stack (`services/code/`) chamando a API do VCF Automation.
 
+---
+
+## Módulo 9 — parte B: do script local ao workflow no vRO
+
+*Escrito pelo professor VCF Orchestrator Specialist.*
+
+### 1. O que muda de verdade
+
+| | Script no PC | No vRO |
+|---|---|---|
+| Onde roda | seu shell | appliance do Orchestrator |
+| Permissão | seu usuário | conta do vRO |
+| Input | argv | parâmetros da **action** |
+| Saída | stdout | tipo de retorno → **output binding** |
+| Estado | disco, env | nada persiste entre execuções |
+
+Não há seu `PATH`, seu cwd nem seu arquivo de config. Segredo e parâmetro de
+ambiente viram **ConfigurationElement**: atributo do pacote, consumido como input.
+
+### 2. Ciclo mínimo
+
+1. Script isolado, entradas e saída explícitas.
+2. Teste local com `node script.js` e dado falso.
+3. Publique como **action**, declarando inputs e tipo de retorno.
+4. No **workflow**, input do usuário + tarefa scriptable chamando a action;
+   ligue campo → parâmetro.
+5. Teste no vRO com VM de laboratório e leia o log.
+
+### 3. Git
+
+- `.action`, `.workflow`, `input_form_*`: texto (XML/JSON), diff normal.
+- `.package`: zip, binário. Versione os elementos extraídos, não o gerado.
+- `signatures/`: quebra o pacote se copiada errada; omita dos elementos editados.
+
+**Nunca commitar**: ConfigurationElement de produção, credenciais, `.package` gerado.
+
+### 4. Três erros clássicos
+
+1. **Tipo de retorno errado**: texto onde o binding espera `number`; falha só em execução.
+2. **Supor cwd**: não existe o seu diretório; use caminho absoluto ou valor do ConfigurationElement.
+3. **Credencial no código**: pertence ao ConfigurationElement e chega por input.
+
+> Depende de versão (9.1.1): formato de `input_form_` e `signatures/` não portam
+> entre versões maiores.
+
 ## Regras do curso
 
 1. **Um modulo por vez.** Nao pule para Docker sem ter feito um commit.
