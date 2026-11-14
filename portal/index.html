@@ -26,6 +26,9 @@
          background:#10233a; padding:3px 7px; border-radius:5px; }
   footer { max-width:1100px; margin:0 auto; padding:0 28px 48px; color:var(--dim); font-size:12.5px; }
   .off { opacity:.45; }
+  .sec { font-size:12px; letter-spacing:.9px; text-transform:uppercase; color:var(--dim);
+         margin:26px 0 12px; font-weight:600; }
+  .sec:first-child { margin-top:0; }
 </style>
 </head>
 <body>
@@ -34,6 +37,9 @@
   <div class="sub">Plataforma pessoal de IA &middot; roda no seu hardware &middot; GitHub para versionar e publicar</div>
 </header>
 <main>
+  <div class="sec">Páginas deste site</div>
+  <div class="grid" id="pages"></div>
+  <div class="sec">Serviços que rodam no seu host</div>
   <div class="grid" id="grid"></div>
 </main>
 <footer>
@@ -53,6 +59,23 @@ const SERVICES = [
   { t:"Produtividade",     d:"RSS e monitor de paginas",                      u:"http://localhost:8081",  ico:"◎", tag:"FreshRSS" },
   { t:"GPU (Kaggle)",      d:"Jobs pesados de modelo, 30 h/semana gratis",    u:"https://www.kaggle.com/code", ico:"⚡", tag:"externo" },
 ];
+const PAGES = [
+  { t:"Curso", d:"10 módulos, do zero ao stack rodando", u:"curso/", ico:"◆", tag:"aprender" },
+  { t:"Ferramentas free", d:"IA para código, imagem, docs — sem instalar", u:"ferramentas/", ico:"⚡", tag:"usar agora" },
+  { t:"Prompt para vRO", d:"IA que revisa código do Orchestrator", u:"prompts/vro-code-review.html", ico:"{}", tag:"vRO" },
+  { t:"Arquitetura", d:"Limites reais, licenças e onde cada coisa roda", u:"arquitetura/", ico:"▤", tag:"referência" },
+];
+const pgrid = document.getElementById("pages");
+for (const s of PAGES) {
+  const a = document.createElement("a");
+  a.className = "card";
+  a.href = s.u;
+  a.innerHTML = `<span class="ico">${s.ico}</span>
+    <div class="tt">${s.t}</div>
+    <div class="ds">${s.d}</div>
+    <span class="tag">${s.tag}</span>`;
+  pgrid.appendChild(a);
+}
 const grid = document.getElementById("grid");
 for (const s of SERVICES) {
   const a = document.createElement("a");

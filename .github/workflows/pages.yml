@@ -23,13 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Prepare site
         run: |
-          mkdir -p _site
-          cp -r portal/* _site/
-          [ -f docs/ARQUITETURA.md ] && cp docs/ARQUITETURA.md _site/arquitetura.md || true
-          # desliga o Jekyll: o painel e HTML puro
-          touch _site/.nojekyll
+          pip install --quiet markdown
+          python scripts/build_pages.py --src docs --out _site --portal portal
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
