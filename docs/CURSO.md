@@ -166,17 +166,44 @@ No plano provider, liste `/cloudapi/1.0.0/orgs` — *confirme na doc*.
 | **404 / redirect** | Org ou plano errado | Provider × tenant, ou org inexistente |
 | **403** | Token bom, papel insuficiente | Permissão na org, não autenticação |
 
-### Ajuste para o seu ambiente (TJSP)
+### Ajuste para o seu ambiente (TJSP) — dúvida resolvida na fonte
 
-O TJSP é **9.1.1 embarcado** e tem org de tenant **TJSP-VMs** (VM Apps), então o
-caminho que se aplica é `/tm/oauth/tenant/TJSP-VMs/token`.
+O TJSP é **9.1.1 embarcado** e tem org de tenant **TJSP-VMs** (VM Apps). O caminho
+que se aplica é o de **org**: o API token nasce dentro da org TJSP-VMs e troca-se
+por bearer em `/tm/oauth/tenant/TJSP-VMs/token`.
 
-**Ressalva que eu marco:** o professor descreve o caminho *provider* usando API
-token, mas o que já observamos na prática é que **o menu de API Tokens aparece na
-org de tenant**, não no provider. Os dois relatos não fecham. Antes de escrever
-código, abra a sua instância e confirme de onde o token sai — não presuma. Se o
-menu de API Tokens estiver só na org, o caminho provider da tabela acima não se
-aplica ao seu caso.
+A dúvida do 9A fica fechada: **não existe contradição, existem dois planos.** O
+que escolhe o caminho não é "instância nova × herdada", é **em qual escopo você
+está logado**:
+
+| O que você quer fazer | Onde o token nasce | Troca |
+|---|---|---|
+| Provisionar/operar na org (VM Apps: projetos, deployments, VMs) | UI do Automation **logado na org** (TJSP-VMs) → nome no canto superior direito → *My Account* → aba **API Tokens** → *New* | `POST /tm/oauth/tenant/TJSP-VMs/token`, `grant_type=refresh_token` |
+| Administração do provider (All Apps, criar orgs, papéis, políticas) | UI em `/provider`, org `system` → *My Account* → **API Tokens** | `POST /oauth/provider/token` |
+
+A TechDocs separa assim: o procedimento de provider vale para "a newly deployed
+instance of VCF Automation **that does not include a VM Apps tenant**"; quando
+**existe** org VM Apps, o procedimento é "Get a Refresh Token for the VM Apps
+Tenant" — e ele diz, literalmente, para **trocar a organização para a org do
+tenant** antes de abrir *My Account* → *API Tokens*. O menu *My Account* existe
+nos dois planos; o que muda é a org em que você está quando o abre. Por isso, no
+ambiente do TJSP, você vê o menu na org: é o caminho correto para o seu caso.
+
+Correção da frase anterior do curso: "instância nova, sem org VM Apps → caminho
+provider" continua válido como regra geral, mas **o TJSP não é esse caso**.
+
+- Escopo do token: **org** é o que serve para relatório e automação de VMs.
+- Endpoint: `/tm/oauth/tenant/<org>/token` (se der 404, tente sem o prefixo `tm`).
+- Bearer dura **1 hora**; o API token dura ~90 dias por padrão
+  (Provider Portal → General Settings → Timeouts).
+- Confirme o papel antes de culpar o token: 403 é papel na org, não autenticação.
+
+Fontes (TechDocs VCF 9.1, conferidas em 14/11/2026):
+
+- Get a Refresh Token for the VM Apps Tenant — https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/administration-sdks-cli-and-tools/about-the-vcf-automation-api/what-are-the-automation-apis-and-how-do-i-use-them_1/getting-your-authentication-token/getting-a-refresh-token-for-the-vm-apps-tenant.html
+- Get Your Access Token for the VCF Automation API — https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/administration-sdks-cli-and-tools/about-the-vcf-automation-api/what-are-the-automation-apis-and-how-do-i-use-them_1/getting-your-authentication-token/get-your-access-token-for-vra-8-x.html
+- Generating API Tokens for Service Provider Account — https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/administration-sdks-cli-and-tools/about-the-vcf-automation-api/service-provider-portal/generating-provider-management-api-tokens.html
+- Referência VM Apps 9.1.1 — https://developer.broadcom.com/xapis/vm-apps-org-deployment/9.1.1/
 
 *Fonte citada: TechDocs 9.1 — "Get Your Access Token for the VCF Automation API",
 "Generating API Tokens for Service Provider Account", "OAuth Token Support for API
@@ -226,6 +253,117 @@ ambiente viram **ConfigurationElement**: atributo do pacote, consumido como inpu
 
 > Depende de versão (9.1.1): formato de `input_form_` e `signatures/` não portam
 > entre versões maiores.
+
+---
+
+## Módulo 10 — o primeiro caso de uso real (60 min)
+
+*Escrito pelo professor VCF 9.1.x.*
+
+### Objetivo
+
+Um script no `services/code/` que autentica no VCF Automation do TJSP e gera um
+**relatório de VMs agrupadas por projeto** (Markdown + CSV), para fechar o
+inventário do mês sem planilha manual.
+
+Escolhi este caso porque ele lê o que você já faz à mão, **não escreve nada no
+ambiente** (só `GET`), e o resultado é conferível contra a UI — três coisas que
+fazem um bom primeiro caso de uso.
+
+### Pré-requisitos
+
+- API token criado **na org TJSP-VMs** (Módulo 9A, correção acima).
+- Papel de leitura na org. Um `org_owner` serve; um usuário só de catálogo não.
+- `curl`, `jq` e Python 3 no host (o relatório é montado em Python; o curl/jq
+  acima servem para provar a API antes de codar).
+- `VCFA_HOST`, `VCFA_TENANT=TJSP-VMs`, `VCFA_API_TOKEN` em `compose/.env`
+  — e `.env` no `.gitignore`. O token **não** entra no código nem no commit.
+- Onde escrever: `services/code/relatorio_vms.py` — **já escrito e testado**, está em
+  `relatorio_vms.py` junto com este patch. Copie e adapte, não reescreva.
+
+### Passos
+
+**1. Provar o token antes de escrever código.** Um comando, uma resposta:
+
+```bash
+TOKEN=$(curl -sk -X POST "https://$VCFA_HOST/tm/oauth/tenant/$VCFA_TENANT/token" \
+  -H 'Content-Type: application/x-www-form-urlencoded' -H 'Accept: application/json' \
+  -d grant_type=refresh_token -d "refresh_token=$VCFA_API_TOKEN" \
+  | jq -r .access_token)
+[ "$TOKEN" != "null" ] && echo OK || echo FALHOU
+```
+
+Se voltar `FALHOU`, pare aqui e leia o Módulo 9A. Não siga com um token suspeito.
+
+**2. Ler os projetos.** Documentado para org VM Apps 9.1.1:
+
+```bash
+curl -sk -G "https://$VCFA_HOST/iaas/api/projects" \
+  --data-urlencode '$top=200' --data-urlencode '$count=true' \
+  -H "Authorization: Bearer $TOKEN" | jq -r '.content[] | [.id, .name] | @tsv'
+```
+
+Anote `id` e `name`. A lista paginada vem em `.content[]` (com `totalElements`);
+se vier vazia, 403 ou org errada. Note o `$top` entre **aspas simples**: sem elas
+o shell come `$top` e a API devolve a página padrão.
+
+**3. Ler as VMs e o `projectId` de cada uma.** Documentado para org VM Apps 9.1.1 —
+`GET /iaas/api/machines`, resposta paginada em `.content[]`, cada item com
+`id`, `name`, `projectId` e `powerState`:
+
+```bash
+curl -sk -G "https://$VCFA_HOST/iaas/api/machines" \
+  --data-urlencode '$top=500' --data-urlencode '$count=true' \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq -r '.content[] | [.projectId, .name, .powerState] | @tsv'
+```
+
+Alternativa (deployments, útil para ver status de provisionamento):
+`GET /deployment/api/deployments?size=200&projects=<id>` → `.content[]` com
+`name` e `status`. Comece por `machines`: é o que responde "VM por projeto".
+
+**4. Agrupar e escrever.** Duas saídas em `reports/AAAA-MM/`:
+`vms-por-projeto.md` (projeto, VMs, ligadas, desligadas) e `.csv` (`;`, para o
+Excel em pt-BR). O script recebe o mês em `--mes` e escreve em pasta por mês, então
+não sobrescreve o relatório do mês anterior.
+
+**5. Rodar.** Não existe serviço `code` no compose (o `services/code/` é código,
+não container) — o script roda no seu shell, que é o que ele precisa:
+
+```bash
+set -a; . ./compose/.env; set +a
+python3 services/code/relatorio_vms.py --mes 2026-11
+```
+
+Quando ele estiver estável, é este o momento do Módulo 9B: empacotar como action
+no vRO. Não antes.
+
+**6. Commit** do script e do `README.md` com o exemplo de uso. Do `.env`, não.
+
+### Como você sabe que funcionou
+
+Quatro checagens, todas verificáveis:
+
+1. O passo 1 imprime `OK` e o token tem três partes separadas por ponto.
+2. O número de projetos no relatório **bate com o Organizations/Projetos da UI**.
+3. A soma de VMs por projeto é igual ao total do tenant — se não for, há projeto
+   invisível ao seu papel (é o 403 disfarçado de dado faltando).
+4. Rode de novo em outro dia: o arquivo novo tem a data no nome e o `git diff` só
+   mexe em números, não em estrutura.
+
+Se as quatro passarem, o caso de uso está pronto — e o mesmo esqueleto
+(token → GET → agrupar → arquivo) serve para relatório de hosts, de redes ou de
+datastores, trocando só o passo 3.
+
+### Armadilhas deste módulo
+
+| Sintoma | Causa | Correção |
+|---|---|---|
+| 401 | API token enviado como `Bearer` | Ele só serve para gerar o bearer |
+| 404 no token | Nome da org errado | `TJSP-VMs`, exatamente como no Provider Portal |
+| 403 na listagem | Papel insuficiente na org | Ajuste o papel; o token está bom |
+| Relatório "vazio" mas 200 | Paginação (`$top` comido pelo shell) | Aspas simples; cheque `totalElements` |
+| Para de funcionar em ~90 dias | API token expirou | Gere outro e rotacione o `.env` |
 
 ---
 
@@ -281,6 +419,8 @@ O binding IN é o argumento, o OUT é o `return`. Sem OUT ligado, a action roda 
 
 ---
 
+---
+
 ## Regras do curso
 
 1. **Um modulo por vez.** Nao pule para Docker sem ter feito um commit.
@@ -302,5 +442,5 @@ Marque aqui conforme avanca:
 - [ ] Modulo 7 — GPU
 - [ ] Modulo 8 — seguranca
 - [ ] Modulo 9 — integracao VCF (partes A e B escritas)
-- [ ] Modulo 10 — primeiro caso de uso real de VCF
-- [ ] Modulo 11 — primeiro workflow no vRO
+- [ ] Modulo 10 — primeiro caso de uso real (relatorio de VMs por projeto)
+- [ ] Modulo 11 — primeiro workflow no vRO (action normalizarNomeVM)

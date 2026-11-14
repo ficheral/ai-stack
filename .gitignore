@@ -11,3 +11,4 @@ data/
 *.ckpt
 *.mp4
 *.mov
+reports/
