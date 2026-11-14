@@ -112,6 +112,12 @@ Aqui entram os outros dois professores:
 
 As duas partes da aula estao escritas logo abaixo, pelos dois professores.
 
+Depois do 9 vem:
+
+- **Modulo 10** — primeiro caso de uso real: relatorio de VMs por projeto (professor VCF 9.1.x)
+- **Modulo 11** — primeiro workflow de verdade no vRO (professor Orchestrator Specialist)
+- **Modulo 12** — pacotes e versionamento: o `.package`, a assinatura, o import e o que vai no Git
+
 ---
 
 ## Módulo 9 — parte A: do VCF Automation para fora
@@ -120,94 +126,13 @@ As duas partes da aula estao escritas logo abaixo, pelos dois professores.
 
 ### Fluxo de autenticação (9.x)
 
-Não existe mais login programático com usuário/senha. O caminho é:
-
-1. Você cria um **API token** na UI (My Account → API Tokens, ~90 dias).
-2. Troca esse token por um **bearer access token** (~1h de validade).
-3. Usa `Authorization: Bearer` em todas as chamadas.
-
-O endpoint da troca depende do plano/instalação:
-
-| Plano | Endpoint |
-|---|---|
-| Provider / All Apps (instância nova, sem org VM Apps) | `POST /oauth/provider/token` |
-| Org VM Apps | `POST /tm/oauth/tenant/<org>/token`, `grant_type=refresh_token` |
-| VCF 9.1 unificado (VIDB) | `POST https://<vidb>/acs/t/<role>/token` com `api_token=` |
-| Org herdada do Aria 8.x | `/csp/gateway/am/api/login.json` + `POST /iaas/api/login` |
-
 ### Embarcado × externo
-
-O Automation do domínio de gestão é instância nova, quase sempre **sem org VM Apps**
-→ caminho provider. Instância externa ou herdada de 8.x mantém a org →
-`/tm/oauth/tenant/...`. Confira a org no Provider Portal → Organizations antes de
-escrever código.
 
 ### Credencial nunca no código
 
-`export VCFA_API_TOKEN=...`, `.env` no `.gitignore`, secret no CI,
-`env_file`/`secrets:` no compose. Se um token foi commitado: **rotacione**, não
-apague o commit e finja que resolveu.
-
-```bash
-export VCFA_HOST=vcfa.exemplo.com VCFA_TENANT=minha-org
-TOKEN=$(curl -sk -X POST "https://$VCFA_HOST/tm/oauth/tenant/$VCFA_TENANT/token" \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d grant_type=refresh_token -d "refresh_token=$VCFA_API_TOKEN" | jq -r .access_token)
-curl -sk "https://$VCFA_HOST/iaas/api/projects" -H "Authorization: Bearer $TOKEN" | jq .
-```
-
-No plano provider, liste `/cloudapi/1.0.0/orgs` — *confirme na doc*.
-
 ### Os 3 primeiros erros
 
-| Código | Causa | O que significa |
-|---|---|---|
-| **401** | Mandou o API token como Bearer | Ele só serve para gerar o access token |
-| **404 / redirect** | Org ou plano errado | Provider × tenant, ou org inexistente |
-| **403** | Token bom, papel insuficiente | Permissão na org, não autenticação |
-
 ### Ajuste para o seu ambiente (TJSP) — dúvida resolvida na fonte
-
-O TJSP é **9.1.1 embarcado** e tem org de tenant **TJSP-VMs** (VM Apps). O caminho
-que se aplica é o de **org**: o API token nasce dentro da org TJSP-VMs e troca-se
-por bearer em `/tm/oauth/tenant/TJSP-VMs/token`.
-
-A dúvida do 9A fica fechada: **não existe contradição, existem dois planos.** O
-que escolhe o caminho não é "instância nova × herdada", é **em qual escopo você
-está logado**:
-
-| O que você quer fazer | Onde o token nasce | Troca |
-|---|---|---|
-| Provisionar/operar na org (VM Apps: projetos, deployments, VMs) | UI do Automation **logado na org** (TJSP-VMs) → nome no canto superior direito → *My Account* → aba **API Tokens** → *New* | `POST /tm/oauth/tenant/TJSP-VMs/token`, `grant_type=refresh_token` |
-| Administração do provider (All Apps, criar orgs, papéis, políticas) | UI em `/provider`, org `system` → *My Account* → **API Tokens** | `POST /oauth/provider/token` |
-
-A TechDocs separa assim: o procedimento de provider vale para "a newly deployed
-instance of VCF Automation **that does not include a VM Apps tenant**"; quando
-**existe** org VM Apps, o procedimento é "Get a Refresh Token for the VM Apps
-Tenant" — e ele diz, literalmente, para **trocar a organização para a org do
-tenant** antes de abrir *My Account* → *API Tokens*. O menu *My Account* existe
-nos dois planos; o que muda é a org em que você está quando o abre. Por isso, no
-ambiente do TJSP, você vê o menu na org: é o caminho correto para o seu caso.
-
-Correção da frase anterior do curso: "instância nova, sem org VM Apps → caminho
-provider" continua válido como regra geral, mas **o TJSP não é esse caso**.
-
-- Escopo do token: **org** é o que serve para relatório e automação de VMs.
-- Endpoint: `/tm/oauth/tenant/<org>/token` (se der 404, tente sem o prefixo `tm`).
-- Bearer dura **1 hora**; o API token dura ~90 dias por padrão
-  (Provider Portal → General Settings → Timeouts).
-- Confirme o papel antes de culpar o token: 403 é papel na org, não autenticação.
-
-Fontes (TechDocs VCF 9.1, conferidas em 14/11/2026):
-
-- Get a Refresh Token for the VM Apps Tenant — https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/administration-sdks-cli-and-tools/about-the-vcf-automation-api/what-are-the-automation-apis-and-how-do-i-use-them_1/getting-your-authentication-token/getting-a-refresh-token-for-the-vm-apps-tenant.html
-- Get Your Access Token for the VCF Automation API — https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/administration-sdks-cli-and-tools/about-the-vcf-automation-api/what-are-the-automation-apis-and-how-do-i-use-them_1/getting-your-authentication-token/get-your-access-token-for-vra-8-x.html
-- Generating API Tokens for Service Provider Account — https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/administration-sdks-cli-and-tools/about-the-vcf-automation-api/service-provider-portal/generating-provider-management-api-tokens.html
-- Referência VM Apps 9.1.1 — https://developer.broadcom.com/xapis/vm-apps-org-deployment/9.1.1/
-
-*Fonte citada: TechDocs 9.1 — "Get Your Access Token for the VCF Automation API",
-"Generating API Tokens for Service Provider Account", "OAuth Token Support for API
-and CLI Access" (VIDB).*
 
 ---
 
@@ -378,7 +303,9 @@ Inventário → **Actions** → nova pasta `com.tjsp.aula` → *Add Action* → 
 Aba **Script**: colar o código. Aba **Inputs**: `nome`, tipo `string`. **Return type**: `string`.
 
 ```js
-// ES5 / Rhino — sem let, const, arrow, template string
+// ES5 portátil: roda do 7.x ao 9.1. No 9.1 (Rhino 1.8.0) arrow, template string,
+// includes e for..of também rodam; class, spread, ?., ?? e async/await não.
+// let/const: documentado, com relato de falha — confirme com o teste do item 2b.
 if (!nome) throw new Error("Informe o nome da VM.");
 var n = String(nome).toLowerCase()
   .replace(/[áàâãä]/g, "a").replace(/[éèêë]/g, "e")
@@ -438,9 +365,244 @@ Guarde o resultado: ele vale para todo código que você escrever daqui pra fren
 **O que acabou de acontecer:** a action é a função, o workflow é quem a orquestra.
 O binding IN é o argumento, o OUT é o `return`. Sem OUT ligado, a action roda e o valor se perde — erro silencioso mais comum.
 
-*Versão:* `System.getModule` existe de 7.x a 9.1. Em 9.x o Rhino continua o motor padrão de actions (ES5). `throw` em action aparece como erro do workflow; usar `WorkflowException` também é válido.
+*Versão:* `System.getModule` existe de 7.x a 9.1. O Rhino continua o motor padrão de actions — **1.8.0 no 9.1**, 1.7.15 no 9.0. ES5 é o default portátil, não o único dialeto suportado: veja o teste do item 2b. `throw` em action aparece como erro do workflow; usar `WorkflowException` também é válido.
 
 ---
+
+---
+
+## Módulo 12 — pacotes e versionamento (45 min)
+
+*Escrito por Trinakia75, a partir da proposta do professor VCF Orchestrator Specialist — formato do pacote, assinatura e caminhos de log verificados na fonte.*
+
+Depois do Módulo 11, que é a ordem certa: você só empacota o que já existe.
+
+### O problema que este módulo resolve
+
+No Módulo 11 a action e o workflow viveram **só dentro do seu vRO**. Isso não é entrega: não
+volta depois de um restore, não vai para o cliente, não roda em homologação. O único jeito de
+tirar objeto do Orchestrator de um lado e colocar do outro é o **`.package`** — e é aí que quase
+todo mundo trava, porque o pacote tem três camadas que erram em silêncio: **assinatura**,
+**encoding** e **versão**.
+
+A regra do módulo: **o pacote que importa é o que o próprio vRO gerou.** Pacote montado à mão
+(ou "consertado" editando o zip) não importa. O resto do módulo é como viver com isso.
+
+---
+
+### 1) O que tem dentro de um `.package` (verificado em export real do 9.1.1)
+
+Isto não é dedução: foi conferido desmontando um export real (`SnapshotxDays`, vRO 9.1.1.0100)
+e reconstruindo byte a byte — 54 de 54 entradas bateram.
+
+| Entrada | O que é | Encoding / compressão |
+|---|---|---|
+| `raiz/` | pasta com o nome do pacote, com entradas de **diretório explícitas** | store |
+| `raiz/dunes-meta-inf` | cartão de identidade: `pkg-name`, `vso-version`, `vso-build-nb`, `used-plugins`, `pkg-id`, **`pkg-signer`**, **`pkg-owner`** | UTF-8 sem BOM |
+| `raiz/certificates/<DN>.cer` | certificado do publicador (DER), com o DN no nome | store |
+| `raiz/elements/<id>/` | cada objeto: `info`, `categories`, `data`, `input_form_` | `elements/` em deflate |
+| `raiz/signatures/` | espelho de **todos** os arquivos, um `.sig` de 256 bytes cada | store |
+
+- **`data`**, **`categories`** e **`input_form_`** vão em **UTF-16BE com BOM** (`FE FF`).
+  `dunes-meta-inf` e `info` vão em UTF-8 **sem** BOM. Trocar isso é a causa de acento virar
+  caractere estranho — ou do export de package com Unicode vir em hex.
+- **A assinatura é RSA-2048, PKCS#1 v1.5 + SHA-256, sobre os bytes crus do arquivo** —
+  não sobre o hash, não sobre o zip inteiro. 256 bytes por arquivo. Foi assim que as 18
+  assinaturas do export de referência validaram.
+- **`used-plugins`** é o campo que decide se o pacote serve no destino: lista os plugins que os
+  itens usam. Plugin ausente no destino não impede o import, mas deixa o elemento órfão.
+
+**Consequência prática, e é a mais importante do módulo:** mexer em **um byte** de um `data`
+invalida a assinatura daquele arquivo. Não existe "abrir o pacote, corrigir uma linha e fechar".
+Se o pacote está errado, corrija no vRO e exporte de novo.
+
+---
+
+### 2) O ciclo que funciona
+
+```
+elemento no vRO  →  New Package → adicionar elementos → Save
+                 →  Export (gera .package assinado)
+                 →  Import no destino → confiar no certificado do publicador
+```
+
+Três detalhes que mudam o resultado:
+
+1. **`Save` sem rebuild.** Num pacote que só agrupa objetos que já existem no servidor, salve
+   com **"Skip rebuilding"**. Rebuild gera IDs/estrutura próprios e é o caminho que já produziu
+   `Invalid Package element type` (KB 405937).
+2. **Importar não sobrescreve por acaso.** O import compara **versão por elemento**: elemento do
+   pacote mais novo que o do servidor entra; mais antigo precisa ser **selecionado à mão**.
+   Por API isso aparece como **409**, não como 400 — não é defeito do pacote.
+3. **"Import Configuration Attribute Values"** vem **marcado** por padrão. Num pacote com
+   ConfigurationElement isso significa **sobrescrever a senha de produção do cliente** pelos
+   valores da sua origem. Desmarque, sempre, e diga isso no README da entrega.
+
+---
+
+### 3) Pré-voo de 5 minutos: culpar o pacote só depois disto
+
+Antes de abrir log, pergunte ao próprio vRO o que ele achou do arquivo. Existe endpoint para
+isso — ele analisa e devolve três booleanos separados, que é exatamente o que você precisa para
+não diagnosticar no escuro:
+
+```bash
+# token do tenant (Módulo 9A) — vRO embarcado no VCF Automation 9.1
+TOKEN=$(curl -sk -X POST "https://$VCFA_HOST/tm/oauth/tenant/$VCFA_TENANT/token" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d grant_type=refresh_token -d "refresh_token=$VCFA_API_TOKEN" | jq -r .access_token)
+
+# análise do arquivo, SEM importar nada
+curl -sk -X POST "https://$VCFA_HOST/vco/api/packages/import-details" \
+  -H "Authorization: Bearer $TOKEN" -F "file=@com.tjsp.dns-13.package" \
+  | jq '{packageName, packageAlreadyExists, contentVerified,
+         certificateTrusted, certificateValid, certificateUnknown}'
+```
+
+| Campo | `false` significa | O que fazer |
+|---|---|---|
+| `contentVerified` | a assinatura **não** confere com o conteúdo | pacote corrompido ou editado à mão — exporte de novo |
+| `certificateTrusted` | certificado do publicador desconhecido | é o esperado na primeira vez: aceite "trust" no import |
+| `certificateValid` | certificado vencido ou fora de validade | exporte do vRO com certificado válido |
+| `packageAlreadyExists` | já existe pacote com esse nome | decidir se é upgrade ou duplicata antes de importar |
+
+O import de verdade é o mesmo endpoint sem `/import-details`, com os parâmetros explícitos —
+nada de confiar no default:
+
+```bash
+curl -sk -X POST "https://$VCFA_HOST/vco/api/packages?overwrite=true\
+&importConfigurationAttributeValues=false\
+&importConfigSecureStringAttributeValues=false\
+&tagImportMode=ImportButPreserveExistingValue" \
+  -H "Authorization: Bearer $TOKEN" -F "file=@com.tjsp.dns-13.package"
+```
+
+`overwrite=true` faz o pacote vencer a comparação de versão; os dois `importConfiguration*`
+em `false` são o que impede o pacote de mexer em credencial do ambiente de destino.
+
+---
+
+### 4) Quando falha: onde está o motivo de verdade
+
+O erro na tela nunca diz nada útil. A mensagem real está no log do `vco-app`.
+
+| Sintoma | Onde olhar | O que procurar |
+|---|---|---|
+| 400 / "Failed to import package" | `vco-server-app.log` do pod `vco-app` | linha do elemento que quebrou, ex.: `Invalid Package element type: '...Repository'` |
+| 409 | resposta da API | elemento do servidor é mais novo que o do pacote |
+| Import "some" e nunca volta | tamanho do pacote / gateway | KB 388745: import acima de ~5 min estoura `stream-idle-timeout` — exporte em pacotes menores |
+| Import ok, item não funciona | `used-plugins` do pacote × plugins do destino | plugin ausente = objeto órfão, sem erro no import |
+
+**Onde ficam os logs no 9.1 embarcado** (importante: o caminho do appliance externo **não**
+existe aqui):
+
+```bash
+# console do Orchestrator (o equivalente ao catalina.out de antigamente)
+kubectl -n prelude logs vco-app-0 -c vco-server-app --tail=200
+
+# logs em arquivo do serviço
+ls -la /var/log/services-logs/prelude/vco-app/file-logs/
+
+# buscar a mensagem em todo o histórico rotacionado
+find /var/log/services-logs/prelude/vco-app/file-logs/ -type f -print0 \
+  | xargs -0 grep -l "Failed to import"
+```
+
+- O pod é `vco-app-0`, namespace **`prelude`** (o mesmo nome do tempo do Aria Automation).
+- No **embarcado** o `/data/vco` **não** existe: os caminhos `.../data/vco/usr/lib/vco/...`
+  que aparecem em KBs de appliance externo servem só para o externo. Os diretórios que sobram
+  (`conf/`, `plugins/SQL/`) ficam em `/usr/lib/vco/app-server/`.
+- Logs rotacionados são `.xz` — use `xzgrep` em vez de `grep`.
+- Cuidado com o nome da pasta: a TechDocs 9.1 escreve **`file-logs`**; a KB 326113 escreve
+  **`files-logs`**. Se o `ls` der "No such file", tente a outra — e use `ls /var/log/services-logs/prelude/vco-app/`
+  para ver o que existe antes de montar o caminho.
+- Fonte de tudo isso: TechDocs 9.1 (Kerberos / plugins, 05/11/2026) e KB 326113 (8.x, mas é a
+  mesma estrutura de `services-logs` no 9.1).
+
+---
+
+### 5) Versionamento no Git
+
+O pacote é **binário e gerado**: ele não vai para o repositório. O que vai é o que o gerou.
+
+**Commite:**
+
+- os elementos extraídos — `.action`, `.workflow`, `input_form_*`, `info`: texto, `git diff` normal
+- o script separado (`.js`, `.ps1`) quando existir, para revisão de código pura
+- um `README.md` por pacote com: versão, `vso-version` de origem, lista de elementos,
+  `used-plugins`, pré-requisitos e procedimento de import
+- uma **tag** no commit que gerou o pacote (`v13.0.0`), porque o nome do arquivo carrega a versão
+
+**Não commite:** `.package` gerado (nem `.zip`, nem `.b64`), `signatures/`, `certificates/`,
+ConfigurationElement com valores reais, `.env`, token, senha.
+
+**Regra de versão:** a versão é do **conjunto**, não do elemento. O vRO versiona elemento por
+elemento e o import decide por elemento (por isso o 409 existe). Quem garante que o conjunto é
+coerente é o seu repositório: tag + README + lista de elementos. Sem isso, "importa no meu mas
+não no cliente" é destino, não azar.
+
+---
+
+### 6) Checklist de entrega (o que o cliente recebe junto com o pacote)
+
+1. `.package` assinado, com nome versionado (`com.cliente.coisa-13.0.0.package`).
+2. `README` com `vso-version` de origem e `used-plugins` — para ele saber se o destino tem os plugins.
+3. Lista de elementos e o que cada um faz, com o **ponto de entrada** destacado (o workflow que importa).
+4. Procedimento de import: **Assets → Packages → Import**, aceitar o certificado do publicador,
+   **desmarcar** "Import Configuration Attribute Values".
+5. Rollback: reimportar a versão anterior com `overwrite=true` — e o aviso de que isso **não**
+   desfaz objeto apagado no destino.
+6. Uma linha dizendo **o que não foi testado**. Entrega sem essa linha é promessa, não entrega.
+
+---
+
+### 7) As cicatrizes (erros que custaram tempo de verdade)
+
+| Erro | Causa | Correção |
+|---|---|---|
+| Pacote recusado, sem mensagem clara | montado à mão / assinatura ausente | exportar do próprio vRO; conferir `contentVerified` |
+| Acento vira lixo no import | `data`/`input_form_` em UTF-8 | UTF-16BE **com BOM**; export de Unicode em hex é o sintoma |
+| `Exception binding was not set` | item com `catch-name` sem `throw-bind-name` | criar a variável de erro e ligar o *Output exception binding* |
+| Senha do cliente sobrescrita no import | "Import Configuration Attribute Values" marcado | desmarcar; `importConfigurationAttributeValues=false` por API |
+| Pacote importa, workflow não roda | plugin do `used-plugins` ausente no destino | instalar o plugin antes, ou avisar no README |
+| Funciona no 8.x, quebra no 9.1 | `vso-version` de origem antigo demais | abrir o pacote no 9.1 e reexportar — não reusar pacote velho |
+
+---
+
+### Prática (20 min)
+
+Use o workflow do Módulo 11 (ou um dos seus reais) e faça o ciclo completo duas vezes:
+
+1. Crie o pacote no seu vRO com a action e o workflow, **Skip rebuilding**, exporte.
+2. Rode o `import-details` e leia os quatro campos. Anexe a resposta ao seu `README.md`.
+3. Importe num ambiente/tenant de laboratório, aceitando o certificado.
+4. Provogue o **409**: importe de novo a versão anterior. Leia a mensagem — é o gate de versão.
+5. Abra o log (`kubectl -n prelude logs vco-app-0 -c vco-server-app --tail=200`) e ache a linha
+   do import. Se você não consegue achar o próprio import no log, você não vai achar o do cliente.
+
+**Como saber que funcionou:** o item importado executa no destino, o `README` responde sozinho
+as perguntas de pré-requisito, e você sabe dizer onde no log aparece o import daquele arquivo.
+
+---
+
+### Fontes
+
+- TechDocs — Import a Package in VCF Operations orchestrator (15/06/2026). O texto é o mesmo no 9.1;
+  este é o endereço que responde hoje (o caminho `/9-1/...` devolve 404 com request direto):
+  https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-0/configuration-of-vmware-cloud-foundation-operations-orchestrator/managing-packages-in-vro/import-a-package-in-the-operations-client.html
+- TechDocs 9.1 — Configurar Kerberos nos plugins (caminhos de log do embarcado, `/data/vco` excluído), 05/11/2026:
+  https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-1/configuration-of-vmware-cloud-foundation-operations-orchestrator/vcf-ochestrator-plugins-overview/manage-the-orchestrator-plug-ins/configure-kerberos-authentication.html
+- KB 326113 — Services logs locations and pod descriptions (Aria Automation / Orchestrator 8.x):
+  https://knowledge.broadcom.com/external/article/326113/services-logs-locations-and-pod-descript.html
+- KB 405937 — Importing package in Aria Orchestrator fails with 400 Bad request:
+  https://knowledge.broadcom.com/external/article/405937/importing-package-in-aria-orchestrator-f.html
+- KB 388745 — Import above 5 min times out (envoy `stream-idle-timeout`, 8.18.1):
+  https://knowledge.broadcom.com/external/article/388745/failed-to-import-package-http-failure-re.html
+- API — Import Package e Import-details (VCF Operations Orchestrator API 9.1):
+  https://developer.broadcom.com/xapis/vcf-operations-orchestrator-api/latest/packages/post
+  https://developer.broadcom.com/xapis/vcf-operations-orchestrator-api/latest/packages/import-details/post
+- Estrutura interna e algoritmo de assinatura: verificação sobre export real do 9.1.1 em
+  11/11/2026 (54/54 entradas reconstruídas, 18/18 assinaturas validadas).
 
 ---
 
@@ -467,3 +629,4 @@ Marque aqui conforme avanca:
 - [ ] Modulo 9 — integracao VCF (partes A e B escritas)
 - [ ] Modulo 10 — primeiro caso de uso real (relatorio de VMs por projeto)
 - [ ] Modulo 11 — primeiro workflow no vRO (action normalizarNomeVM)
+- [ ] Modulo 12 — pacote, assinatura, versionamento e entrega
