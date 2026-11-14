@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PromptLab · ai-stack</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#0a0e14;--card:#141c28;--line:#22303f;--line2:#2d3d50;--fg:#e8eef6;
+  --dim:#8b9bb0;--acc:#5aa9ff;--acc2:#7ee0b8;--warn:#ffc857;--err:#ff7b72}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:15.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+header.top{border-bottom:1px solid var(--line);background:rgba(10,14,20,.85);
+  backdrop-filter:blur(12px);position:sticky;top:0;z-index:50}
+.top-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:6px;
+  padding:13px 24px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;color:var(--fg);margin-right:14px;
+  display:flex;align-items:center;gap:8px;text-decoration:none}
+.brand span{width:8px;height:8px;border-radius:2px;background:var(--acc);
+  box-shadow:0 0 10px var(--acc)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{color:var(--dim);font-size:13.5px;padding:6px 11px;border-radius:7px;
+  text-decoration:none;font-weight:500}
+nav a:hover{color:var(--fg);background:#182231}
+nav a.on{color:var(--fg);background:#172435;box-shadow:inset 0 0 0 1px var(--line2)}
+.wrap{max-width:980px;margin:0 auto;padding:30px 24px 90px}
+h1{font-size:31px;letter-spacing:-1px;margin:0 0 10px;font-weight:750}
+.lead{color:#a9b8ca;max-width:680px;margin:0 0 26px}
+.setup{background:var(--card);border:1px solid var(--line);border-radius:13px;
+  padding:20px;margin-bottom:22px}
+.setup h2{font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);
+  margin:0 0 14px;font-weight:700}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,select,textarea{background:#0d1320;border:1px solid var(--line2);color:var(--fg);
+  border-radius:9px;padding:10px 13px;font-size:14px;font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+input[type=password],input[type=text]{flex:1;min-width:260px}
+button{background:var(--acc);color:#04121f;border:none;border-radius:9px;
+  padding:11px 20px;font-size:14px;font-weight:650;cursor:pointer;font-family:inherit}
+button:hover{filter:brightness(1.1)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.ghost{background:transparent;color:var(--dim);border:1px solid var(--line2)}
+.hint{color:#6f8095;font-size:12.5px;margin-top:10px}
+.hint a{color:var(--acc)}
+.chat{display:flex;flex-direction:column;gap:14px;margin-top:26px}
+.msg{padding:16px 18px;border-radius:12px;border:1px solid var(--line);
+  white-space:pre-wrap;word-wrap:break-word;font-size:14.5px;line-height:1.65}
+.msg.user{background:#152131;border-color:#24384f;align-self:flex-end;max-width:88%}
+.msg.bot{background:var(--card)}
+.msg.err{background:#2a1618;border-color:#5c2b2e;color:#ffb3ae}
+.who{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);
+  margin-bottom:8px;font-weight:700}
+textarea{width:100%;min-height:110px;resize:vertical;font-family:ui-monospace,
+  SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.badge{display:inline-block;font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;
+  background:#12243a;border:1px solid #1e3c5e;color:var(--acc);padding:3px 8px;
+  border-radius:5px;font-weight:600}
+details{margin-top:14px}
+summary{cursor:pointer;color:var(--dim);font-size:13px}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html"><span></span>ai-stack</a>
+  <nav>
+    <a href="index.html">Painel</a>
+    <a href="promptlab.html" class="on">PromptLab</a>
+    <a href="curso/index.html">Curso</a>
+    <a href="ferramentas/index.html">Ferramentas</a>
+    <a href="agentes/index.html">Agentes</a>
+    <a href="arquitetura/index.html">Arquitetura</a>
+  </nav>
+</div></header>
+
+<div class="wrap">
+  <h1>PromptLab</h1>
+  <p class="lead">Um chat com IA que roda <strong>nesta página</strong>, com os prompts
+  do ai-stack já prontos. Você usa sua própria chave gratuita do Google AI Studio —
+  ela fica salva só no seu navegador e nunca passa por servidor nosso.</p>
+
+  <div class="setup">
+    <h2>1. Sua chave (grátis)</h2>
+    <div class="row">
+      <input type="password" id="key" placeholder="Cole aqui sua chave do Google AI Studio (AIza...)">
+      <select id="model">
+        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite</option>
+        <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
+        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+      </select>
+      <button id="save">Salvar</button>
+    </div>
+    <p class="hint">Não tem? Crie em
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+      — é gratuito e não pede cartão. A chave fica no <code>localStorage</code> deste navegador.</p>
+  </div>
+
+  <div class="setup">
+    <h2>2. Prompt do agente</h2>
+    <div class="row" style="margin-bottom:12px">
+      <select id="preset" style="flex:1">
+        <option value="revisor-vro">Revisor vRO (JavaScript/PowerShell do Orchestrator)</option>
+        <option value="leitor-kb">Leitor de KB (cita o trecho, não inventa)</option>
+        <option value="documentos">Documentos e planilhas (extrai estrutura)</option>
+        <option value="relatorios">Relatórios de status</option>
+      </select>
+    </div>
+    <textarea id="system" spellcheck="false"></textarea>
+    <p class="hint">Pode editar. O texto sai daqui para a API direto.</p>
+  </div>
+
+  <div class="setup">
+    <h2>3. Conversa</h2>
+    <textarea id="prompt" placeholder="Cole o código, a KB ou a pergunta..."></textarea>
+    <div class="row" style="margin-top:12px">
+      <button id="send">Enviar</button>
+      <button id="clear" class="ghost">Limpar conversa</button>
+      <span class="badge" id="status">pronto</span>
+    </div>
+  </div>
+
+  <div class="chat" id="chat"></div>
+</div>
+
+<script>
+const PRESETS = {
+  "revisor-vro": `Você é revisor de código do VMware Aria Automation Orchestrator (vRO) 9.1 embarcado.
+Seu trabalho é apontar defeito, não elogiar.
+
+AMBIENTE (vRO 9.1 = Rhino 1.8.0; 9.0 = 1.7.15):
+- ES5 é o default portátil. Em 9.x rodam arrow, template string, includes e for..of;
+  NÃO rodam class, spread, ?., ??, async/await, replaceAll. let/const: teste antes.
+- Não existe require, process, fetch, document, cwd nem PATH. Log: System.log/debug/error.
+  Java exposto: só java.util.*.
+- Existem: JSON.parse/stringify, map/filter/indexOf, Object.keys, replace(/re/g),
+  E4X e String.format(fmt,[args]) (exige array).
+- Action: System.getModule("<mod>").<acao>(args) — ordem e aridade exatas.
+  "Cannot find function" significa assinatura errada.
+- Globais: Server.findForType("<tipo>", id|nome), getWorkflowWithId(id).
+- REST: RESTHostManager.createTransientHostFrom(RESTHostManager.createHost("x"))
+  e host.createRequest(metodo,url,corpo).execute().contentAsString.
+- XML = E4X (new XML(s), .@attr, ..); não serializa direto: toXMLString().
+- *_Task do vCenter é assíncrono: sem vim3WaitTaskEnd(task,true,1) o erro aparece depois.
+- Falhar: throw "msg" ou new Error(). new WorkflowException() — confirmar na instância.
+- Action tem UM return; sem binding OUT o valor se perde em silêncio.
+  Input não vinculado chega null: teste antes de ler propriedade.
+- Atributo de workflow: letra inicial, sem espaço/acento/hífen. Item com catch-name
+  exige throw-bind-name, senão o vRO recusa com "Exception binding was not set".
+
+FORMATO:
+**Veredito:** roda / quebra / roda com risco
+**Problemas:** linha N → o que é → correção
+**Versão corrigida:** ES5 completo, pronto para colar
+
+Se faltar informação, pergunte. Nunca invente plugin, classe ou método do vRO —
+diga "confirme no API Explorer da sua instância".`,
+
+  "leitor-kb": `Você lê documentação técnica da Broadcom/VMware e responde com precisão.
+
+REGRAS:
+1. Sempre cite o trecho que sustenta a resposta. Se não houver trecho, diga
+   "não está no documento".
+2. Nunca complete lacuna com conhecimento geral sem marcar como tal.
+3. Separe instrução oficial de inferência sua.
+4. Se o documento for de versão diferente de VCF 9.1.1, avise.
+5. Números (limites, builds, versões) precisam aparecer literalmente no texto.
+
+FORMATO:
+**Resposta direta:** 1-3 frases
+**Trecho que sustenta:** citação
+**Ressalvas:** o que o documento não diz
+
+Se eu pedir procedimento de UI e o documento não descrever o caminho do menu,
+diga que não descreve, em vez de inventar.`,
+
+  "documentos": `Você processa documentos técnicos e devolve estrutura, não prosa.
+
+A partir do arquivo ou texto enviado:
+1. Diga o que é o documento, em uma frase, e para quem se destina.
+2. Liste as seções principais (só títulos).
+3. Extraia TODA tabela, preservando cabeçalho e números.
+4. Liste decisões, prazos, responsáveis e números que aparecem.
+5. Liste lacunas: o que o documento deveria ter e não tem.
+
+Nunca invente número. Célula ilegível = "(ilegível)".
+Não resuma tabela em texto: reproduza a tabela.`,
+
+  "relatorios": `Você escreve relatório de status de projeto para liderança técnica.
+
+ESTRUTURA FIXA:
+1. Situação em uma frase (verde/amarelo/vermelho + motivo).
+2. O que avançou desde o último relatório (só fato, sem adjetivo).
+3. O que está travado (bloqueio, dono, há quantos dias).
+4. Decisão que preciso de quem lê (uma só, se houver).
+5. Risco novo, se houver.
+
+REGRAS:
+- Nada de "estamos empenhados", "seguimos firmes", "grande evolução".
+- Todo item tem dono e data, ou é marcado como "sem dono".
+- Se não houver avanço, escreva "sem avanço".
+- Máximo 250 palavras.`
+};
+
+const $ = (id) => document.getElementById(id);
+const chat = $("chat");
+
+function saved() {
+  const k = localStorage.getItem("plab_key") || "";
+  const m = localStorage.getItem("plab_model") || "gemini-3.5-flash-lite";
+  const p = localStorage.getItem("plab_preset") || "revisor-vro";
+  $("key").value = k;
+  $("model").value = m;
+  $("preset").value = p;
+  $("system").value = localStorage.getItem("plab_system_" + p) || PRESETS[p];
+}
+saved();
+
+$("save").onclick = () => {
+  localStorage.setItem("plab_key", $("key").value.trim());
+  localStorage.setItem("plab_model", $("model").value);
+  $("status").textContent = "chave salva";
+  setTimeout(() => $("status").textContent = "pronto", 1600);
+};
+$("model").onchange = () => localStorage.setItem("plab_model", $("model").value);
+$("preset").onchange = () => {
+  const p = $("preset").value;
+  localStorage.setItem("plab_preset", p);
+  $("system").value = localStorage.getItem("plab_system_" + p) || PRESETS[p];
+  localStorage.setItem("plab_system_" + p, $("system").value);
+};
+$("system").oninput = () =>
+  localStorage.setItem("plab_system_" + $("preset").value, $("system").value);
+
+function add(role, text) {
+  const d = document.createElement("div");
+  d.className = "msg " + role;
+  const w = document.createElement("div");
+  w.className = "who";
+  w.textContent = role === "user" ? "você" : role === "err" ? "erro" : "IA";
+  d.appendChild(w);
+  d.appendChild(document.createTextNode(text));
+  chat.appendChild(d);
+  window.scrollTo(0, document.body.scrollHeight);
+  return d;
+}
+
+$("clear").onclick = () => { chat.innerHTML = ""; };
+$("send").onclick = async () => {
+  const key = ($("key").value || "").trim();
+  const txt = ($("prompt").value || "").trim();
+  if (!key) { add("err", "Cole sua chave do Google AI Studio no campo 1 e clique em Salvar."); return; }
+  if (!txt) { add("err", "Escreva ou cole algo no campo 3."); return; }
+
+  add("user", txt);
+  $("prompt").value = "";
+  const bt = $("send");
+  bt.disabled = true;
+  $("status").textContent = "enviando...";
+  const box = add("bot", "…");
+
+  const model = $("model").value;
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/"
+              + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: $("system").value }] },
+        contents: [{ role: "user", parts: [{ text: txt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+      })
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      const m = (j.error && j.error.message) || ("HTTP " + r.status);
+      box.className = "msg err";
+      box.lastChild.textContent = "API recusou: " + m
+        + (r.status === 400 ? "\n\nChave inválida ou modelo não disponível para ela." : "")
+        + (r.status === 429 ? "\n\nCota gratuita esgotada por agora." : "");
+      $("status").textContent = "erro " + r.status;
+    } else {
+      const parts = (j.candidates && j.candidates[0] && j.candidates[0].content
+        && j.candidates[0].content.parts) || [];
+      const out = parts.map(p => p.text || "").join("\n").trim();
+      box.lastChild.textContent = out || "(resposta vazia — talvez bloqueio de segurança)";
+      $("status").textContent = "ok";
+    }
+  } catch (e) {
+    box.className = "msg err";
+    box.lastChild.textContent = "Falha de rede: " + e.message
+      + "\n\nSe estiver com bloqueador ou VPN, desative e tente de novo.";
+    $("status").textContent = "rede";
+  } finally {
+    bt.disabled = false;
+  }
+};
+$("prompt").addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") $("send").click();
+});
+</script>
+</body>
+</html>

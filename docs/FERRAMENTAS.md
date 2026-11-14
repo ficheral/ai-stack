@@ -1,72 +1,81 @@
 # Ferramentas para usar agora
 
-Tudo aqui abre no navegador, **sem instalar, sem cartão, sem assinatura**.
+Tudo aqui **abre no navegador**, sem instalar, sem cartão, sem assinatura.
 Verificado em 14/11/2026.
 
-## Para código (a prioridade que você pediu)
+## A nossa: PromptLab
 
-Seu caso: IA que **leia e explique** JavaScript do Orchestrator, PowerShell e YAML.
+**[Abrir o PromptLab](promptlab.html)** — chat com IA dentro do nosso próprio site,
+com os prompts do ai-stack já carregados (revisor vRO, leitor de KB, documentos,
+relatórios). Você usa sua chave gratuita do Google AI Studio, que fica salva só
+no seu navegador.
 
-| Ferramenta | Link | Por que serve para você |
+Isso resolve o "quero usar agora": não depende de instalar Docker, nem de servidor.
+Funciona no computador e no celular, do mesmo jeito.
+
+## Para código — a prioridade do dia a dia
+
+| Ferramenta | Link | Por que serve |
 |---|---|---|
-| **DeepSeek** | https://chat.deepseek.com | Grátis sem plano pago. O mais forte em código nos benchmarks atuais. Aceita colar arquivo ou bloco de código grande |
-| **Qwen Chat** | https://chat.qwen.ai | Contexto de até **1 milhão de tokens** — cabe um pacote vRO inteiro. Melhor para "explica esse workflow completo" |
-| **Google AI Studio** | https://aistudio.google.com | Gemini grátis no navegador, e ainda dá **chave de API free** para usar em script |
-| **Kimi** | https://kimi.com | Bom para tarefa em várias etapas; aguenta conversa longa sem estourar limite |
+| **Google AI Studio** | https://aistudio.google.com | Gemini grátis no navegador **e** dá chave de API gratuita (é o motor do nosso PromptLab) |
+| **DeepSeek** | https://chat.deepseek.com | Grátis sem plano pago, forte em apontar erro de código |
+| **Qwen Chat** | https://chat.qwen.ai | Contexto de até **1 milhão de tokens** — cabe um pacote vRO inteiro |
+| **Kimi** | https://kimi.com | Bom em tarefa de várias etapas |
 
-### Qual usar para o quê
-
-| Situação | Use |
-|---|---|
-| "Este script deu erro, o que é?" | DeepSeek — mais preciso em apontar a linha |
-| "Explica este workflow de 500 linhas" | Qwen — cabe tudo de uma vez |
-| "Escreva um script que faça X" | DeepSeek ou AI Studio |
-| "Preciso chamar isso por API no meu código" | Google AI Studio (chave free) |
-
-> **Aviso que vale a pena:** são serviços de terceiros. **Não cole** token, senha,
-> IP interno, nome de cliente ou conteúdo de produção. Troque por placeholder
-> (`vcfauto-01.exemplo.local`, `USUARIO`, `SENHA`). Para código de cliente, isso
-> não é paranoia — é regra.
+Regra: **código sensível não vai para IA pública.** Troque IP, FQDN, senha e nome
+de cliente por placeholder antes de colar.
 
 ## Imagem
 
 | Ferramenta | Link | Nota |
 |---|---|---|
-| Qwen imagem | https://chat.qwen.ai | Geração e edição no navegador, free |
-| Hugging Face Spaces | https://huggingface.co/spaces | Centenas de demos públicos. Busque `flux` ou `sdxl` |
-| ComfyUI local | `compose/docker-compose.image.yml` | Quando quiser controle de workflow e privacidade |
+| Google AI Studio (imagem) | https://aistudio.google.com | Geração e edição. O **Nano Banana** aparece aqui |
+| Qwen | https://chat.qwen.ai | Geração e edição no navegador |
+| Hugging Face Spaces | https://huggingface.co/spaces | Demos públicos prontos |
+
+### O que descobri sobre Nano Banana (importante)
+
+"Nano Banana" é o apelido do modelo de imagem do Google. **Pelo API, ele saiu do
+plano gratuito** — a tabela oficial marca "Free Tier: Not available" para o
+`gemini-2.5-flash-image`, a US$ 0,039 por imagem no pago (e o 2.5 tem desligamento
+previsto para 15/03/2027, migrando para o 3.1 Flash Lite Image).
+
+Ou seja: **no AI Studio (interface) você usa; por API/chave, cobra.** No PromptLab
+o que funciona grátis é **texto**, não imagem.
 
 ## Documentos
 
 | Ferramenta | Link | Nota |
 |---|---|---|
-| Stirling-PDF | `compose/docker-compose.docs.yml` | Merge, split, OCR, assinatura — roda no seu host |
-| Google Docs / LibreOffice | — | Já tem |
+| NotebookLM | https://notebooklm.google.com | Sobe PDF e ele responde **citando o trecho** |
+| Stirling-PDF | `compose/docker-compose.docs.yml` | Merge, split, OCR — no seu host |
 
-## Pesquisa e atualidades
-
-| Ferramenta | Link | Nota |
-|---|---|---|
-| NotebookLM | https://notebooklm.google.com | Sobe PDF e ele responde **citando o trecho**. Excelente para ler KB da Broadcom |
-| FreshRSS | `compose/docker-compose.productivity.yml` | Leitor de RSS no seu host |
-| Google AI Studio · Deep Research | https://aistudio.google.com | Pesquisa longa com fontes |
-
-## GPU grátis (para modelo grande)
+## GPU grátis
 
 | Ferramenta | Link | Limite |
 |---|---|---|
-| Kaggle | https://www.kaggle.com/code | ~30 h GPU/semana, sessão 12 h, roda agendado |
+| Kaggle | https://www.kaggle.com/code | ~30 h GPU/semana, roda agendado |
 | Google Colab | https://colab.research.google.com | T4, cota não publicada |
 
-## O que **não** é mais grátis (checado hoje)
+## Sobre "EventLabs"
 
-Isto evita você perder tempo:
+Conferi: **não é uma IA de uso geral.** É uma startup de Rotterdam (EventLabs /
+RecapHub) que vende ferramenta para **organizador de evento** — transcreve palestra,
+gera clipe e resumo. É B2B, via demonstração comercial, sem plano gratuito público.
 
-- **Hugging Face Spaces** com Gradio/Docker: passou a exigir PRO. Free agora = static + 2 Spaces em ZeroGPU (5 min GPU/dia).
+Se o seu interesse era "IA que resume reunião e gera clipe", o caminho free é
+outro: NotebookLM para resumo com citação, e o `services/video/pipeline.py` para
+cortar e legendar com ffmpeg no seu host.
+
+## O que deixou de ser grátis (checado hoje)
+
+- **Hugging Face Spaces** com Gradio/Docker: exige PRO. Free = static + 2 Spaces ZeroGPU (5 min GPU/dia).
 - **Ollama Cloud**: virou pay-as-you-go.
-- **Qwen Code** (o CLI): a cota OAuth gratuita acabou em 15/04/2026. O **Qwen Chat** (navegador) continua free.
+- **Qwen Code** (CLI): cota OAuth gratuita encerrada em 15/04/2026. O Qwen Chat continua free.
+- **Nano Banana por API**: sem free tier (acima).
 
-## A regra que economiza seu tempo
+## A regra que economiza tempo
 
-Ferramenta free boa é a que você **já sabe usar**. Não troque de IA a cada semana:
-escolha **DeepSeek para código** e **Qwen para contexto grande**, e domine as duas.
+Ferramenta grátis boa é a que você **já sabe usar**. Não troque de IA toda semana:
+escolha **PromptLab** para o dia a dia do ai-stack, **DeepSeek** para código difícil
+e **Qwen** para arquivo gigante. Dominar três vale mais que conhecer trinta.
