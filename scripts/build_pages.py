@@ -147,6 +147,29 @@ def main() -> int:
             paginas.append((f"prompts/{slug}", titulo, md.stat().st_size))
             print(f"pagina: /prompts/{slug}.html <- {md.name}")
 
+    # 3b. prompts/agents/*.md -> /agentes/<slug>.html
+    ag = src.parent / "prompts" / "agents"
+    if ag.is_dir():
+        ad = out / "agentes"
+        ad.mkdir(exist_ok=True)
+        idx = '<h1>Agentes prontos</h1><p>Copie o prompt e cole no Agent Builder do LibreChat.</p><ul>'
+        for md in sorted(ag.glob("*.md")):
+            slug = md.stem.lower().replace("_", "-")
+            if slug == "readme":
+                continue
+            titulo = slug.replace("-", " ").title()
+            for line in md.read_text(encoding="utf-8").splitlines():
+                if line.startswith("# Agente:"):
+                    titulo = line.split(":", 1)[1].strip()
+                    break
+            (ad / f"{slug}.html").write_text(
+                page(titulo, render_md(md), "/agentes/"), encoding="utf-8"
+            )
+            idx += f'<li><a href="{slug}.html">{titulo}</a></li>'
+            print(f"pagina: /agentes/{slug}.html")
+        idx += "</ul>"
+        (ad / "index.html").write_text(page("Agentes", idx, "/agentes/"), encoding="utf-8")
+
     # 4. .nojekyll para o Pages servir tudo
     (out / ".nojekyll").write_text("")
 
