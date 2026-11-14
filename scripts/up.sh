@@ -106,11 +106,19 @@ if ! docker info >/dev/null 2>&1; then
     $SUDO systemctl start docker >/dev/null 2>&1 || true
   fi
   if ! docker info >/dev/null 2>&1; then
-    echo "  -> iniciando dockerd em background (container/Alpine/WSL)"
-    $SUDO dockerd >/tmp/dockerd.log 2>&1 &
-    sleep 8
+    # Codespace/container nao tem init: rc-service nem systemctl existem.
+    # dockerd direto e o que funciona.
+    echo "  -> iniciando dockerd em background (Codespace/container)"
+    mkdir -p /var/log 2>/dev/null
+    $SUDO nohup dockerd >/var/log/dockerd.log 2>&1 &
+    for i in $(seq 1 15); do
+      sleep 2
+      docker info >/dev/null 2>&1 && break
+      printf "."
+    done
+    echo
   fi
-  sleep 2
+  sleep 1
 
   if ! docker info >/dev/null 2>&1; then
     erro "o daemon nao subiu."

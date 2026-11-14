@@ -90,16 +90,40 @@ bash scripts/diagnostico.sh
 Ele diz a distro, o gerenciador de pacotes, o que já está instalado e o comando
 exato para o **seu** caso.
 
-**Alpine / Codespace padrão** (é o seu caso — confirmado Alpine 3.23):
+**Alpine / Codespace** (é o seu caso — confirmado Alpine 3.23, você é root):
 
 ```bash
 apk add docker docker-cli-compose
-rc-service docker start        # ou: dockerd &
+dockerd &            # container NAO tem init: nem service nem rc-service existem
 ./scripts/up.sh docs
 ```
 
-> **Alpine não tem `service`** — o comando é `rc-service`.
-> E no Codespace você já é **root**, então `sudo` não existe e não é necessário.
+Ou deixe um script fazer tudo:
+
+```bash
+bash scripts/instalar-docker.sh
+```
+
+> **Container não tem `init`.** `service` (Debian) e `rc-service` (Alpine normal)
+> **não existem** dentro de um Codespace. O único jeito é subir `dockerd` direto.
+> E você já é root, então `sudo` também não existe — não é erro, é o ambiente.
+
+### `./scripts/up.sh: not found`
+
+Isso **não é permissão** — é **diretório errado**. O `./` significa "neste
+diretório". Se você está em `~` e o repo está em outro lugar, o shell não acha.
+
+```bash
+cd ~/ai-stack          # entre no repo primeiro
+ls scripts/            # confirme que up.sh esta ai
+./scripts/up.sh docs
+```
+
+Ou chame pelo caminho completo, que funciona de qualquer lugar:
+
+```bash
+bash ~/ai-stack/scripts/instalar-docker.sh
+```
 
 **Debian/Ubuntu:**
 
