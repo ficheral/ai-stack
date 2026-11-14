@@ -406,6 +406,29 @@ System.log("Nome normalizado: " + saida);
 
 8. **Save and run** com `nomeVM` = `Servidor Ação Ç`.
 
+### 2b) Teste de 30 segundos — o que o seu vRO aceita
+
+Antes de confiar em qualquer guia (inclusive neste), descubra o que a **sua**
+instância aceita. Crie uma action de teste chamada `testeSintaxe` e cole:
+
+```js
+var r = [];
+try { var s = "x"; r.push("var: ok"); } catch (e) { r.push("var: FALHOU"); }
+try { eval("let a = 1;"); r.push("let: ok"); } catch (e) { r.push("let: FALHOU"); }
+try { eval("const b = 1;"); r.push("const: ok"); } catch (e) { r.push("const: FALHOU"); }
+try { eval("var f = (x) => x;"); r.push("arrow: ok"); } catch (e) { r.push("arrow: FALHOU"); }
+try { eval("var t = `a${1}`;"); r.push("template: ok"); } catch (e) { r.push("template: FALHOU"); }
+try { eval("var c = class {};"); r.push("class: ok"); } catch (e) { r.push("class: FALHOU"); }
+try { [1].includes(1); r.push("includes: ok"); } catch (e) { r.push("includes: FALHOU"); }
+return r.join(" | ");
+```
+
+O retorno diz o que roda. **Isto resolve a dúvida que ninguém consegue responder
+de fora**: a documentação diz que `let`/`const` funcionam no 9.1, mas há relato de
+falha no 9.0. Só a sua instância responde.
+
+Guarde o resultado: ele vale para todo código que você escrever daqui pra frente.
+
 ### 3) O que você deve ver
 
 - Log: `Nome normalizado: servidor-acao-c` — e o output `nomeNormalizado` igual.
