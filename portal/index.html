@@ -5,90 +5,131 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ai-stack</title>
 <style>
-  :root { --bg:#0d1117; --card:#161b22; --line:#26303d; --fg:#e6edf3; --dim:#8b949e; --acc:#4a9eff; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg);
-         font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-  header { padding:56px 28px 28px; max-width:1100px; margin:0 auto; }
-  h1 { margin:0 0 8px; font-size:34px; letter-spacing:-.5px; }
-  .sub { color:var(--dim); font-size:15px; }
-  main { max-width:1100px; margin:0 auto; padding:8px 28px 72px; }
-  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); }
-  a.card { display:block; background:var(--card); border:1px solid var(--line);
-           border-radius:12px; padding:18px 18px 16px; text-decoration:none; color:inherit;
-           transition:border-color .15s, transform .15s; }
-  a.card:hover { border-color:var(--acc); transform:translateY(-2px); }
-  .ico { font-size:22px; line-height:1; margin-bottom:10px; display:block; }
-  .tt { font-weight:600; margin-bottom:4px; }
-  .ds { color:var(--dim); font-size:13.5px; }
-  .tag { display:inline-block; margin-top:10px; font-size:11px; letter-spacing:.4px;
-         text-transform:uppercase; color:var(--acc); border:1px solid #1e3a5f;
-         background:#10233a; padding:3px 7px; border-radius:5px; }
-  footer { max-width:1100px; margin:0 auto; padding:0 28px 48px; color:var(--dim); font-size:12.5px; }
-  .off { opacity:.45; }
-  .sec { font-size:12px; letter-spacing:.9px; text-transform:uppercase; color:var(--dim);
-         margin:26px 0 12px; font-weight:600; }
-  .sec:first-child { margin-top:0; }
+*{box-sizing:border-box}
+:root{--bg:#0a0e14;--card:#141c28;--line:#22303f;--line2:#2d3d50;
+  --fg:#e8eef6;--dim:#8b9bb0;--acc:#5aa9ff;--acc2:#7ee0b8}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+
+header.top{border-bottom:1px solid var(--line);background:rgba(10,14,20,.82);
+  backdrop-filter:blur(12px);position:sticky;top:0;z-index:50}
+.top-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:6px;
+  padding:13px 24px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;letter-spacing:-.2px;color:var(--fg);
+  margin-right:14px;display:flex;align-items:center;gap:8px;text-decoration:none}
+.brand span{width:8px;height:8px;border-radius:2px;background:var(--acc);
+  box-shadow:0 0 10px var(--acc)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{color:var(--dim);font-size:13.5px;font-weight:500;padding:6px 11px;
+  border-radius:7px;transition:.14s;text-decoration:none}
+nav a:hover{color:var(--fg);background:#182231}
+nav a.on{color:var(--fg);background:#172435;box-shadow:inset 0 0 0 1px var(--line2)}
+
+.hero{max-width:1080px;margin:0 auto;padding:62px 24px 8px}
+h1{font-size:clamp(30px,4.4vw,44px);letter-spacing:-1.2px;line-height:1.12;
+  margin:0 0 16px;font-weight:750}
+.lead{color:#a9b8ca;font-size:17.5px;max-width:660px;line-height:1.62;margin:0}
+.lead a{color:var(--acc2)}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));
+  max-width:1080px;margin:0 auto;padding:0 24px}
+.card{display:block;background:var(--card);border:1px solid var(--line);
+  border-radius:13px;padding:20px;transition:.16s;text-decoration:none;color:inherit;
+  position:relative;overflow:hidden}
+.card:hover{border-color:var(--acc);transform:translateY(-2px);
+  box-shadow:0 8px 26px rgba(0,0,0,.35)}
+.card .ico{font-size:21px;display:block;margin-bottom:12px;color:var(--acc2)}
+.card .tt{font-weight:650;font-size:15.5px;margin-bottom:5px}
+.card .ds{color:var(--dim);font-size:13.5px;line-height:1.55}
+.card .tag{display:inline-block;margin-top:13px;font-size:10.5px;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--acc);background:#12243a;
+  border:1px solid #1e3c5e;padding:3px 8px;border-radius:5px;font-weight:600}
+.card.off{opacity:.4}
+.card.off:hover{transform:none;border-color:var(--line);box-shadow:none}
+
+.sec{max-width:1080px;margin:0 auto;padding:38px 24px 14px;font-size:11.5px;
+  letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);font-weight:700}
+.sec small{display:block;text-transform:none;letter-spacing:0;font-weight:400;
+  font-size:13px;margin-top:6px;color:#6f8095}
+footer{max-width:1080px;margin:0 auto;padding:44px 24px 80px;color:var(--dim);
+  font-size:12.5px;border-top:1px solid var(--line);margin-top:50px}
+footer a{color:var(--acc)}
 </style>
 </head>
 <body>
-<header>
-  <h1>ai-stack</h1>
-  <div class="sub">Plataforma pessoal de IA &middot; roda no seu hardware &middot; GitHub para versionar e publicar</div>
-</header>
-<main>
-  <div class="sec">Páginas deste site</div>
-  <div class="grid" id="pages"></div>
-  <div class="sec">Serviços que rodam no seu host</div>
-  <div class="grid" id="grid"></div>
-</main>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html"><span></span>ai-stack</a>
+  <nav>
+    <a href="index.html" class="on">Painel</a>
+    <a href="curso/index.html">Curso</a>
+    <a href="ferramentas/index.html">Ferramentas</a>
+    <a href="agentes/index.html">Agentes</a>
+    <a href="arquitetura/index.html">Arquitetura</a>
+    <a href="https://github.com/ficheral/ai-stack" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+</div></header>
+
+<div class="hero">
+  <h1>Plataforma pessoal de IA</h1>
+  <p class="lead">Tudo em plano gratuito. O GitHub guarda o código e publica estas
+  páginas; os serviços rodam no seu host. Comece pelo
+  <a href="ferramentas/index.html">que dá para usar agora</a>.</p>
+</div>
+
+<div class="sec">Páginas deste site</div>
+<div class="grid" id="pages"></div>
+
+<div class="sec">Serviços no seu host
+  <small>Apagados = ainda não estão rodando. Sobem com <code>./scripts/up.sh &lt;dominio&gt;</code></small>
+</div>
+<div class="grid" id="grid"></div>
+
 <footer>
-  Painel estatico (GitHub Pages). Cada servico abre no seu proprio endereco.
-  Os que aparecem apagados nao estao no ar neste host.
+  ai-stack · sem assinatura, sem mensalidade, sem cartão ·
+  <a href="https://github.com/ficheral/ai-stack">código no GitHub</a>
 </footer>
+
 <script>
-// Edite aqui os enderecos reais dos seus servicos.
-const SERVICES = [
-  { t:"Agente de IA",      d:"Chat com modelos locais, ferramentas e MCP",   u:"http://localhost:3080",  ico:"◆", tag:"LibreChat" },
-  { t:"Imagem",            d:"Geracao e edicao por prompt, workflows salvos", u:"http://localhost:8188",  ico:"▣", tag:"ComfyUI" },
-  { t:"Video",             d:"Cortes, legenda, montagem e modelos locais",    u:"#",                      ico:"▶", tag:"ffmpeg" },
-  { t:"Codigo",            d:"Scripts, snippets e helpers",                   u:"#",                      ico:"{}",tag:"repo" },
-  { t:"Documentos",        d:"PDF para Markdown, OCR, merge, assinatura",     u:"http://localhost:8080",  ico:"▤", tag:"Stirling" },
-  { t:"Jogos",             d:"Projeto Godot: prototipo, build web",           u:"#",                      ico:"◈", tag:"Godot" },
-  { t:"Seguranca",         d:"Varredura de imagem, codigo e site",            u:"#",                      ico:"⛨", tag:"Trivy" },
-  { t:"Produtividade",     d:"RSS e monitor de paginas",                      u:"http://localhost:8081",  ico:"◎", tag:"FreshRSS" },
-  { t:"GPU (Kaggle)",      d:"Jobs pesados de modelo, 30 h/semana gratis",    u:"https://www.kaggle.com/code", ico:"⚡", tag:"externo" },
-];
 const PAGES = [
-  { t:"Curso", d:"10 módulos, do zero ao stack rodando", u:"curso/", ico:"◆", tag:"aprender" },
-  { t:"Ferramentas free", d:"IA para código, imagem, docs — sem instalar", u:"ferramentas/", ico:"⚡", tag:"usar agora" },
-  { t:"Prompt para vRO", d:"IA que revisa código do Orchestrator", u:"prompts/vro-code-review.html", ico:"{}", tag:"vRO" },
-  { t:"Agentes prontos", d:"Prompts para o Agent Builder do LibreChat", u:"agentes/", ico:"◉", tag:"criar" },
-  { t:"Arquitetura", d:"Limites reais, licenças e onde cada coisa roda", u:"arquitetura/", ico:"▤", tag:"referência" },
+  { t:"Ferramentas para usar agora", d:"IA de código, imagem e documentos que abrem no navegador, sem instalar",
+    u:"ferramentas/index.html", ico:"⚡", tag:"comece aqui" },
+  { t:"Curso", d:"10 módulos, do zero ao stack rodando. Cada um com tarefa prática",
+    u:"curso/index.html", ico:"◆", tag:"aprender" },
+  { t:"Agentes prontos", d:"Prompts para criar agentes no LibreChat: revisor vRO, KB, documentos",
+    u:"agentes/index.html", ico:"◉", tag:"criar" },
+  { t:"Prompts", d:"Prompt de sistema que ensina a IA sobre o seu ambiente real",
+    u:"prompts/index.html", ico:"{}", tag:"copiar" },
+  { t:"Arquitetura", d:"Tetos reais de cada plano, licenças e onde cada coisa roda",
+    u:"arquitetura/index.html", ico:"▤", tag:"referência" },
 ];
-const pgrid = document.getElementById("pages");
-for (const s of PAGES) {
-  const a = document.createElement("a");
-  a.className = "card";
-  a.href = s.u;
-  a.innerHTML = `<span class="ico">${s.ico}</span>
-    <div class="tt">${s.t}</div>
-    <div class="ds">${s.d}</div>
-    <span class="tag">${s.tag}</span>`;
-  pgrid.appendChild(a);
+
+const SERVICOS = [
+  { t:"Agente de IA", d:"Chat com modelo local — LibreChat + Ollama", u:"http://localhost:3080", ico:"◆", tag:"LibreChat" },
+  { t:"Imagem", d:"Gerar e editar por prompt — ComfyUI", u:"http://localhost:8188", ico:"▣", tag:"ComfyUI" },
+  { t:"Documentos", d:"PDF para Markdown, OCR, merge — Stirling", u:"http://localhost:8080", ico:"▤", tag:"Stirling" },
+  { t:"Produtividade", d:"RSS e monitor de páginas — FreshRSS", u:"http://localhost:8081", ico:"◎", tag:"FreshRSS" },
+  { t:"Vídeo", d:"Cortes, legenda, montagem — ffmpeg", u:"#", ico:"▶", tag:"scripts" },
+  { t:"Jogos", d:"Godot exportando para web", u:"#", ico:"◈", tag:"godot" },
+  { t:"Segurança", d:"Trivy e Semgrep no seu código", u:"#", ico:"⛨", tag:"cli" },
+  { t:"GPU grátis", d:"Jobs pesados — Kaggle, 30 h/semana", u:"https://www.kaggle.com/code", ico:"⚡", tag:"externo" },
+];
+
+function render(alvo, itens, offlineOk) {
+  const box = document.getElementById(alvo);
+  for (const s of itens) {
+    const a = document.createElement("a");
+    const off = (s.u === "#");
+    a.className = "card" + (off ? " off" : "");
+    a.href = s.u;
+    if (s.u.startsWith("http")) { a.target = "_blank"; a.rel = "noopener"; }
+    a.innerHTML = `<span class="ico">${s.ico}</span><div class="tt">${s.t}</div>
+      <div class="ds">${s.d}</div><span class="tag">${s.tag}</span>`;
+    box.appendChild(a);
+  }
 }
-const grid = document.getElementById("grid");
-for (const s of SERVICES) {
-  const a = document.createElement("a");
-  a.className = "card" + (s.u === "#" ? " off" : "");
-  a.href = s.u;
-  if (s.u.startsWith("http")) a.target = "_blank", a.rel = "noopener";
-  a.innerHTML = `<span class="ico">${s.ico}</span>
-    <div class="tt">${s.t}</div>
-    <div class="ds">${s.d}</div>
-    <span class="tag">${s.tag}</span>`;
-  grid.appendChild(a);
-}
+render("pages", PAGES);
+render("grid", SERVICOS);
 </script>
 </body>
 </html>
