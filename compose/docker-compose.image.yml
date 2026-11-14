@@ -1,0 +1,27 @@
+# Dominio: IMAGEM
+# ComfyUI (GPL-3.0). Interface web por workflow, salva os fluxos em JSON versionaveis.
+# CPU funciona mas e lento; com GPU NVIDIA o mesmo compose serve.
+
+name: ai-stack-image
+
+services:
+  comfyui:
+    image: ghcr.io/ai-dock/comfyui:latest-cuda
+    container_name: ai-comfyui
+    restart: unless-stopped
+    ports: ["${PORT_COMFYUI:-8188}:8188"]
+    environment:
+      WEB_ENABLE_AUTH: "false"
+      COMFYUI_ARGS: "--listen 0.0.0.0 --port 8188"
+    volumes:
+      - "${DATA_DIR:-/srv/ai-stack}/comfy/models:/opt/ComfyUI/models"
+      - "${DATA_DIR:-/srv/ai-stack}/comfy/output:/opt/ComfyUI/output"
+      - "../services/image/workflows:/opt/ComfyUI/user/default/workflows"
+    # GPU NVIDIA
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

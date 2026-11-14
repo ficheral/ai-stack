@@ -1,0 +1,18 @@
+# Dominio: DOCUMENTOS
+# Stirling-PDF (MIT no core): merge, split, OCR, assinatura, conversao.
+# docling roda como CLI no runner, nao precisa de daemon.
+
+name: ai-stack-docs
+
+services:
+  stirling:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: ai-stirling
+    restart: unless-stopped
+    ports: ["${PORT_STIRLING:-8080}:8080"]
+    environment:
+      DOCKER_ENABLE_SECURITY: "false"
+      LANGS: "pt_BR,en_GB"
+    volumes:
+      - "${DATA_DIR:-/srv/ai-stack}/stirling/tessdata:/usr/share/tesseract-ocr/5/tessdata"
+      - "${DATA_DIR:-/srv/ai-stack}/stirling/configs:/configs"

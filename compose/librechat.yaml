@@ -1,0 +1,16 @@
+version: 1.1.5
+cache: true
+interface:
+  privacyPolicy:
+    externalUrl: ''
+    openNewTab: true
+endpoints:
+  custom:
+    - name: "Ollama local"
+      apiKey: "ollama"
+      baseURL: "http://ollama:11434/v1"
+      models:
+        default: ["qwen2.5-coder:7b"]
+        fetch: true
+      titleConvo: true
+      modelDisplayLabel: "Ollama"

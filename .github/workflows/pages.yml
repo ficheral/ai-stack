@@ -1,0 +1,62 @@
+name: Deploy portal to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare site
+        run: |
+          mkdir -p _site
+          cp -r portal/* _site/
+          [ -f docs/ARQUITETURA.md ] && cp docs/ARQUITETURA.md _site/arquitetura.md || true
+          # desliga o Jekyll: o painel e HTML puro
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Validar compose e scripts
+        run: |
+          pip install --quiet pyyaml
+          python - <<'PY'
+          import glob, yaml, sys
+          bad = 0
+          for f in glob.glob('compose/*.yml'):
+              try:
+                  yaml.safe_load(open(f))
+                  print('ok  ', f)
+              except Exception as e:
+                  bad = 1; print('FAIL', f, e)
+          sys.exit(bad)
+          PY
+          python -m py_compile services/**/*.py 2>/dev/null || true
+          for s in scripts/*.sh services/*/*.sh; do bash -n "$s" 2>/dev/null || true; done

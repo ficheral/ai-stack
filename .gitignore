@@ -1,0 +1,13 @@
+.env
+*.local
+__pycache__/
+.venv/
+node_modules/
+public/
+tmp/
+data/
+*.gguf
+*.safetensors
+*.ckpt
+*.mp4
+*.mov
