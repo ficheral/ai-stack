@@ -110,6 +110,78 @@ Aqui entram os outros dois professores:
 
 **Pratica:** um script do ai-stack (`services/code/`) chamando a API do VCF Automation.
 
+As duas partes da aula estao escritas logo abaixo, pelos dois professores.
+
+---
+
+## Módulo 9 — parte A: do VCF Automation para fora
+
+*Escrito pelo professor VCF 9.1.x.*
+
+### Fluxo de autenticação (9.x)
+
+Não existe mais login programático com usuário/senha. O caminho é:
+
+1. Você cria um **API token** na UI (My Account → API Tokens, ~90 dias).
+2. Troca esse token por um **bearer access token** (~1h de validade).
+3. Usa `Authorization: Bearer` em todas as chamadas.
+
+O endpoint da troca depende do plano/instalação:
+
+| Plano | Endpoint |
+|---|---|
+| Provider / All Apps (instância nova, sem org VM Apps) | `POST /oauth/provider/token` |
+| Org VM Apps | `POST /tm/oauth/tenant/<org>/token`, `grant_type=refresh_token` |
+| VCF 9.1 unificado (VIDB) | `POST https://<vidb>/acs/t/<role>/token` com `api_token=` |
+| Org herdada do Aria 8.x | `/csp/gateway/am/api/login.json` + `POST /iaas/api/login` |
+
+### Embarcado × externo
+
+O Automation do domínio de gestão é instância nova, quase sempre **sem org VM Apps**
+→ caminho provider. Instância externa ou herdada de 8.x mantém a org →
+`/tm/oauth/tenant/...`. Confira a org no Provider Portal → Organizations antes de
+escrever código.
+
+### Credencial nunca no código
+
+`export VCFA_API_TOKEN=...`, `.env` no `.gitignore`, secret no CI,
+`env_file`/`secrets:` no compose. Se um token foi commitado: **rotacione**, não
+apague o commit e finja que resolveu.
+
+```bash
+export VCFA_HOST=vcfa.exemplo.com VCFA_TENANT=minha-org
+TOKEN=$(curl -sk -X POST "https://$VCFA_HOST/tm/oauth/tenant/$VCFA_TENANT/token" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d grant_type=refresh_token -d "refresh_token=$VCFA_API_TOKEN" | jq -r .access_token)
+curl -sk "https://$VCFA_HOST/iaas/api/projects" -H "Authorization: Bearer $TOKEN" | jq .
+```
+
+No plano provider, liste `/cloudapi/1.0.0/orgs` — *confirme na doc*.
+
+### Os 3 primeiros erros
+
+| Código | Causa | O que significa |
+|---|---|---|
+| **401** | Mandou o API token como Bearer | Ele só serve para gerar o access token |
+| **404 / redirect** | Org ou plano errado | Provider × tenant, ou org inexistente |
+| **403** | Token bom, papel insuficiente | Permissão na org, não autenticação |
+
+### Ajuste para o seu ambiente (TJSP)
+
+O TJSP é **9.1.1 embarcado** e tem org de tenant **TJSP-VMs** (VM Apps), então o
+caminho que se aplica é `/tm/oauth/tenant/TJSP-VMs/token`.
+
+**Ressalva que eu marco:** o professor descreve o caminho *provider* usando API
+token, mas o que já observamos na prática é que **o menu de API Tokens aparece na
+org de tenant**, não no provider. Os dois relatos não fecham. Antes de escrever
+código, abra a sua instância e confirme de onde o token sai — não presuma. Se o
+menu de API Tokens estiver só na org, o caminho provider da tabela acima não se
+aplica ao seu caso.
+
+*Fonte citada: TechDocs 9.1 — "Get Your Access Token for the VCF Automation API",
+"Generating API Tokens for Service Provider Account", "OAuth Token Support for API
+and CLI Access" (VIDB).*
+
 ---
 
 ## Módulo 9 — parte B: do script local ao workflow no vRO
