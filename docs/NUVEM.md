@@ -29,9 +29,14 @@ dentro da cota.
 4. No terminal que abre, rode:
 
 ```bash
+chmod +x scripts/*.sh       # so se der "Permission denied" (repo antigo)
+./scripts/up.sh lista       # mostra os dominios disponiveis
 ./scripts/up.sh docs        # Stirling-PDF - leve, sobe em segundos
-./scripts/up.sh agent       # LibreChat + Ollama
 ```
+
+Se aparecer `Permission denied`, o arquivo perdeu o bit de execucao. O certo e
+`chmod +x scripts/up.sh`. **Ja corrigi isso no repositorio** (modo `100755`) e o
+CI agora falha se alguem quebrar de novo.
 
 5. A porta 8080 ou 3080 aparece na aba **Ports** — clique em *Open in Browser*.
 
