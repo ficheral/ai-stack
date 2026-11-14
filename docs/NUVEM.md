@@ -90,13 +90,16 @@ bash scripts/diagnostico.sh
 Ele diz a distro, o gerenciador de pacotes, o que já está instalado e o comando
 exato para o **seu** caso.
 
-**Alpine / Codespace padrão:**
+**Alpine / Codespace padrão** (é o seu caso — confirmado Alpine 3.23):
 
 ```bash
-sudo apk add docker docker-cli-compose
-sudo service docker start
+apk add docker docker-cli-compose
+rc-service docker start        # ou: dockerd &
 ./scripts/up.sh docs
 ```
+
+> **Alpine não tem `service`** — o comando é `rc-service`.
+> E no Codespace você já é **root**, então `sudo` não existe e não é necessário.
 
 **Debian/Ubuntu:**
 
