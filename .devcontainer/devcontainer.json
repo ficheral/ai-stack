@@ -1,0 +1,38 @@
+{
+  "name": "ai-stack (Docker + Python)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:1": {
+      "version": "latest",
+      "moby": true
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "forwardPorts": [3080, 8188, 8080, 8081, 11434],
+  "portsAttributes": {
+    "3080": { "label": "LibreChat (agente)", "onAutoForward": "notify" },
+    "8188": { "label": "ComfyUI (imagem)", "onAutoForward": "silent" },
+    "8080": { "label": "Stirling (documentos)", "onAutoForward": "silent" },
+    "8081": { "label": "FreshRSS", "onAutoForward": "silent" },
+    "11434": { "label": "Ollama (API)", "onAutoForward": "silent" }
+  },
+  "postCreateCommand": "bash scripts/bootstrap.sh",
+  "postStartCommand": "docker info >/dev/null 2>&1 || sudo service docker start",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-azuretools.vscode-docker", "redhat.vscode-yaml"],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
